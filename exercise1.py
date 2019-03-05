@@ -1,12 +1,14 @@
 """
-this code implement an automated teller machine
+this code implement an automated teller machine (ATM)
 """
 
 
 class ATM:
     def __init__(self, code, init_money=10000):
-        self._code = code                   # the secret code
-        self._money = init_money       # the amount of the money in the start
+        self._code = code                   # the PIN code
+        self._money = init_money            # the amount of the money in the start
+        # this method implements a strategy design pattern
+        self._menu_strategy = {1 : self.print_balance, 2 : self.cash_withdrawal, 3 : self.exchange_PIN_code}
 
     @staticmethod
     def user_input(start, end):
@@ -21,21 +23,21 @@ class ATM:
             try:
                 data = int(data)    # if the user input is letter - exception will thrown
                 if data < start or data > end:
-                    print("Error!! please enter a number between " + str(start) + " to " + str(end))
+                    raise
                 else:
                     return data
             except ValueError:
                 print("Error!! please enter a number between " + str(start) + " to " + str(end))
 
-    def check_secret_code(self):
+    def check_PIN_code(self):
         """
-        this function will ask the user what is the secret code
+        this function will ask the user what is the PIN code
         and the function will check if the code he entered is correct
         :return: True - the user input is correct
                     otherwise - False
         """
-        secret_code = input("Please enter your secret code: ")
-        if secret_code == self._code:
+        PIN_code = input("Please enter your PIN code: ")
+        if PIN_code == self._code:
             return True
         else:
             print("wrong code")
@@ -48,8 +50,8 @@ class ATM:
         :return: None
         """
         print("1.   print balance")
-        print("2.   cache withdrawal")
-        print("3.   exchange secret code")
+        print("2.   cash withdrawal")
+        print("3.   exchange PIN code")
         print("4.   exit")
 
     def print_balance(self):
@@ -80,10 +82,21 @@ class ATM:
             print("Sorry, you don't have enough money")
             return
         self._money -= amount
+        print("Please take your money :)")
 
-    def cache_withdrawal(self):
+    @staticmethod
+    def money_withdrawal_validation(amount):
         """
-        this function will cache withdrawal
+        this function will check if amount of money is valid to withdrawal
+        validation:     if the amount is divided with 20 or 50 or both without a remainder
+        :param amount: the amount of money
+        :return: True if the amount is valid, otherwise - False
+        """
+        return True if (amount % 50) % 20 == 0 else False
+
+    def cash_withdrawal(self):
+        """
+        this function will cash withdrawal
         :return:
         """
         self.menu_withdrawal()
@@ -96,19 +109,23 @@ class ATM:
             try:
                 amount = input("Please enter the amount of the money do you want to withdrawal: ")
                 amount = int(amount)
-                self.remove_from_money(amount)
+                if self.money_withdrawal_validation(amount):
+                    self.remove_from_money(amount)
+                else:
+                    print("Not a valid amount")
             except ValueError:
                 print("Error input!!")
 
-    def exchange_secret_code(self):
+    def exchange_PIN_code(self):
         """
-        this function will change the secret code
+        this function will change the PIN code
         :return: None
         """
         try:
-            new_code = input("Please enter the new secret code: ")
+            new_code = input("Please enter the new PIN code: ")
             int(new_code)   # if it will throw exception its mean that the user input isn't contain only numbers
             self._code = new_code
+            print("PIN code changed")
         except ValueError:
             print("code needs to be contain only numbers")
 
@@ -120,13 +137,8 @@ class ATM:
                 print("Thanks goodbye")
                 break
             else:
-                if self.check_secret_code():
-                    if data == 1:
-                        self.print_balance()
-                    elif data == 2:
-                        self.cache_withdrawal()
-                    elif data == 3:
-                        self.exchange_secret_code()
+                if self.check_PIN_code():
+                    self._menu_strategy[data]()     # call the function by user-input (strategy design pattern)
                 print()
 
 
